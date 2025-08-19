@@ -15,12 +15,7 @@ app = FastAPI(title="Resume ATS Analyzer API")
 
 # CORS Middleware
 # IMPORTANT: Add your Vercel URL here after deployment
-origins = [
-    "http://localhost:5173",
-    "http://1227.0.0.1:5173",
-    "https://resume-score-engine.vercel.app",
-    "https://resume-score-engine-git-main-manav-desais-projects.vercel.app", 
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
