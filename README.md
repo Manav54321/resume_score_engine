@@ -4,8 +4,7 @@ Stop guessing if your resume is good enough. The **Resume Score Engine** uses po
 
 ### [**🚀 Live Demo**](https://resume-score-engine.vercel.app/)
 
-*(It's recommended to replace this with a screenshot of your app!)*
-
+<img width="1321" height="854" alt="Screenshot 2025-08-19 at 10 58 00 PM" src="https://github.com/user-attachments/assets/bf8fbd94-9dbe-4217-95a8-865c827b8a51" />
 ---
 
 ## 🛠️ Tech Stack
