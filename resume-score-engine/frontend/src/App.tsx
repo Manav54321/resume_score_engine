@@ -26,12 +26,9 @@ const App: React.FC = () => {
       form.append("file", file);
       form.append("job_title", jobTitle);
       form.append("job_description", jobDescription);
-      
-      // IMPORTANT: Replace this with your live Render URL for deployment
-      const apiUrl = "http://localhost:8000/analyze-resume/";
-      
-      const resp = await axios.post(apiUrl, form, { 
-        headers: { "Content-Type": "multipart/form-data" } 
+
+      const resp = await axios.post("https://resume-analyzer-backend-0udg.onrender.com/analyze-resume/", form, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
       setResults(resp.data);
     } catch (err:any) {
