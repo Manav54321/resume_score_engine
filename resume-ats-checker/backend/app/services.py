@@ -8,7 +8,7 @@ from typing import Optional
 
 # --- Configuration ---
 # IMPORTANT: It's better to use environment variables for API keys in production
-GROQ_API_KEY = ""
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL_NAME = "meta-llama/llama-4-maverick-17b-128e-instruct"
 
 # --- LangChain Setup ---
