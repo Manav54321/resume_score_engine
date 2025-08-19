@@ -7,7 +7,7 @@ from docx import Document
 from typing import Optional
 
 # --- Configuration ---
-GROQ_API_KEY = "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"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL_NAME = "meta-llama/llama-4-maverick-17b-128e-instruct"
 
 # --- LangChain Setup ---
