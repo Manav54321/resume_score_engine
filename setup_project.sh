@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# --- Start of Project Setup ---
+# This script creates the complete, corrected Resume Score Engine application from scratch.
 
-echo "--- Creating Project Directory: resume-ats-checker ---"
-mkdir -p resume-ats-checker
-cd resume-ats-checker
+set -euo pipefail
+
+echo "--- Creating Project Directory: resume-score-engine ---"
+mkdir -p resume-score-engine
+cd resume-score-engine
 
 # --- Backend Setup (FastAPI) ---
 echo "--- Setting up Backend ---"
@@ -32,6 +34,7 @@ app = FastAPI(title="Resume ATS Analyzer API")
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://192.168.1.18:5173", # Your specific network IP for mobile testing
 ]
 
 app.add_middleware(
@@ -48,9 +51,6 @@ async def analyze_resume(
     job_title: str = Form(...),
     job_description: Optional[str] = Form(None),
 ):
-    """
-    Analyzes a resume against a job description and returns an ATS score.
-    """
     temp_dir = "temp_files"
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, file.filename)
@@ -66,7 +66,6 @@ async def analyze_resume(
         logger.info(f"Received raw response from model: {result_str}")
         
         try:
-            # Find the start and end of the JSON object in the response string
             start_index = result_str.find('{')
             end_index = result_str.rfind('}') + 1
             
@@ -102,7 +101,6 @@ from docx import Document
 from typing import Optional
 
 # --- Configuration ---
-# IMPORTANT: It's better to use environment variables for API keys in production
 GROQ_API_KEY = "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"
 MODEL_NAME = "meta-llama/llama-4-maverick-17b-128e-instruct"
 
@@ -129,7 +127,7 @@ Your task is to provide a highly detailed evaluation of a resume against a job d
 **Instructions for your analysis:**
 
 1.  **Score:** Provide a percentage score representing the match.
-2.  **Summary:** Provide a detailed, multi-paragraph summary. Cover the candidate's strengths, weaknesses, and overall alignment with the role based on the provided documents. Be specific.
+2.  **Summary:** Provide a detailed, multi-paragraph summary (as detailed as possible). Cover the candidate's strengths, weaknesses, and overall alignment with the role based on the provided documents. Be specific.
 3.  **Keywords Match:** Identify all relevant keywords from the job description and indicate their presence in the resume.
 4.  **Missing Technical Skills:** Scrutinize the job description and identify **every specific technical skill or technology** mentioned that is **not present** in the resume. This includes programming languages, frameworks (like LangChain, FastAPI), databases (like Vector DBs), libraries, and tools. List all of them.
 5.  **Missing Other Skills:** Identify all non-technical skills or qualifications mentioned in the job description that are missing. This includes domain knowledge (e.g., 'experience in finance'), cloud platforms (e.g., 'Azure'), and specific methodologies (e.g., 'Agile').
@@ -168,7 +166,6 @@ chain = prompt | llm | output_parser
 # --- Helper Functions ---
 
 def extract_text_from_pdf(file_path: str) -> str:
-    """Extracts text from a PDF file."""
     with open(file_path, "rb") as f:
         reader = pypdf.PdfReader(f)
         text = ""
@@ -177,7 +174,6 @@ def extract_text_from_pdf(file_path: str) -> str:
     return text
 
 def extract_text_from_docx(file_path: str) -> str:
-    """Extracts text from a .docx file."""
     doc = Document(file_path)
     text = ""
     for para in doc.paragraphs:
@@ -185,7 +181,6 @@ def extract_text_from_docx(file_path: str) -> str:
     return text
 
 def extract_text_from_file(file_path: str, content_type: str) -> str:
-    """Extracts text from a file based on its content type."""
     if content_type == "application/pdf":
         return extract_text_from_pdf(file_path)
     elif content_type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"]:
@@ -194,9 +189,6 @@ def extract_text_from_file(file_path: str, content_type: str) -> str:
         raise ValueError(f"Unsupported file type: {content_type}")
 
 async def get_ats_score(resume_text: str, job_title: str, job_description: Optional[str]) -> str:
-    """
-    Gets the ATS score and feedback from the LangChain service.
-    """
     if not job_description:
         job_description = f"A typical job description for a {job_title} role."
 
@@ -223,7 +215,7 @@ EOF
 echo "--- Setting up Frontend ---"
 mkdir -p frontend/public frontend/src/components
 
-# frontend/package.json
+# frontend/package.json - WITH THE CORRECTED BUILD SCRIPT
 cat <<'EOF' > frontend/package.json
 {
   "name": "frontend",
@@ -232,7 +224,7 @@ cat <<'EOF' > frontend/package.json
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -243,18 +235,18 @@ cat <<'EOF' > frontend/package.json
     "react-dropzone": "^14.2.3"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vitejs/plugin-react": "^4.0.3",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
-    "eslint": "^8.45.0",
+    "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
+    "eslint-plugin-react-refresh": "^0.4.6",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.0.2",
+    "typescript": "^5.2.2",
     "vite": "^5.2.0"
   }
 }
@@ -267,12 +259,13 @@ cat <<'EOF' > frontend/index.html
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ResuMate ATS Analyzer</title>
+    <title>Resume Score Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="antialiased">
+  <body>
+    <div class="background-overlay"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
@@ -288,7 +281,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // This makes it accessible on the network
+    host: true,
     port: 5173
   }
 })
@@ -346,6 +339,20 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      colors: {
+        'brand-dark': '#111111',
+        'brand-light': '#EAEAEA',
+        'brand-secondary': '#A1A1A1',
+        'brand-border': '#333333',
+        'brand-input': '#1C1C1C',
+        'brand-card': '#1A1A1A',
+        'brand-green-light': '#A7F3D0',
+        'brand-green-dark': '#065F46',
+        'brand-yellow-light': '#FDE68A',
+        'brand-yellow-dark': '#92400E',
+        'brand-red-light': '#FECACA',
+        'brand-red-dark': '#991B1B',
+      }
     },
   },
   plugins: [],
@@ -362,51 +369,23 @@ export default {
 }
 EOF
 
-# frontend/src/main.tsx
-cat <<'EOF' > frontend/src/main.tsx
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./index.css";
-
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-EOF
-
 # frontend/src/index.css
-cat <<'CSS' > frontend/src/index.css
+cat <<'EOF' > frontend/src/index.css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root{
-  --bg:#070707;
-  --card:#0e0e10;
-  --muted:#9aa0a6;
-  --accent:#ff6b6b;
+.background-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://lovable.dev/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fdark-login-background.d5ea9915.png&w=3840&q=75');
+    background-size: cover;
+    background-position: center;
+    z-index: -1;
+    opacity: 0.5;
 }
-
-body{
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent),
-              radial-gradient(800px 400px at 90% 90%, rgba(255,255,255,0.01), transparent),
-              var(--bg);
-  color: #e6eef3;
-  -webkit-font-smoothing:antialiased;
-}
-
-.grain-overlay{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Cfilter id='g'%3E%3CfeTurbulence baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23g)' opacity='0.02'/%3E%3C/svg%3E");
-  mix-blend-mode:overlay;
-  z-index:0;
-}
-
 .card {
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid rgba(255,255,255,0.04);
@@ -414,26 +393,46 @@ body{
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-transform duration-200 ease-in-out;
-  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.06);
-}
-.btn-primary {
-  color: white;
-  background: linear-gradient(90deg, rgba(255,107,107,0.16), rgba(255,107,107,0.08));
-  border: 1px solid rgba(255,107,107,0.18);
-}
-.btn:not(:disabled):hover {
-    transform: scale(1.03);
-}
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ease-in-out;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; }
-.small { font-size: 0.85rem; color: var(--muted); }
-CSS
+.btn-primary {
+  @apply text-white;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.btn:not(:disabled):hover {
+  transform: scale(1.03);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.small { font-size: 0.85rem; color: #9aa0a6; }
+EOF
+
+# frontend/src/main.tsx
+cat <<'EOF' > frontend/src/main.tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+EOF
 
 # frontend/src/App.tsx
 cat <<'EOF' > frontend/src/App.tsx
@@ -466,7 +465,7 @@ const App: React.FC = () => {
       form.append("job_title", jobTitle);
       form.append("job_description", jobDescription);
       
-      const resp = await axios.post("http://localhost:8000/analyze-resume/", form, { 
+      const resp = await axios.post("http://192.168.1.18:8000/analyze-resume/", form, { 
         headers: { "Content-Type": "multipart/form-data" } 
       });
       setResults(resp.data);
@@ -478,25 +477,17 @@ const App: React.FC = () => {
     }
   };
 
-  const handleReset = () => {
-    setFile(null);
-    setJobTitle("");
-    setJobDescription("");
-    setResults(null);
-    setError(null);
-  }
-
   return (
     <div className="min-h-screen relative">
-      <div className="grain-overlay"></div>
+      <div className="background-overlay" />
       <div className="max-w-5xl mx-auto px-6 py-14 relative z-10">
         <header className="flex items-center justify-between mb-10">
           <div>
-            <div className="text-2xl font-bold">ResuMate</div>
-            <div className="small">ATS score & suggestions — powered by Maverick.</div>
+            <div className="text-2xl font-bold">Resume Score Engine</div>
+            <div className="small">See how your resume scores against a job description.</div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="btn small" onClick={handleReset}>New Analysis</button>
+            <button className="btn small hidden md:inline-flex" onClick={() => window.location.reload()}>New Analysis</button>
           </div>
         </header>
 
@@ -534,7 +525,7 @@ const App: React.FC = () => {
           </aside>
         </main>
 
-        <footer className="text-center small mt-12 text-white/50">© 2024 ResuMate. All rights reserved.</footer>
+        <footer className="text-center small mt-12 text-white/50">Copyright © 2025 Seventeen. All rights reserved. Powered by Groq Cloud and OpenAI and gpt-oss-120b</footer>
       </div>
     </div>
   );
@@ -543,8 +534,12 @@ const App: React.FC = () => {
 export default App;
 EOF
 
-# src/components/FileUpload.tsx
-cat <<'EOF' > frontend/src/components/FileUpload.tsx
+# frontend/src/components/FileUpload.tsx, JobDetails.tsx, Results.tsx, Spinner.tsx
+# (These files are created below, matching the imports in App.tsx)
+
+mkdir -p frontend/src/components
+
+cat > "frontend/src/components/FileUpload.tsx" <<'TSX'
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
@@ -558,35 +553,28 @@ export const FileUpload: React.FC<FileUploadProps> = ({ setFile, file }) => {
     if (acceptedFiles.length > 0) setFile(acceptedFiles[0]);
   }, [setFile]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop, 
-    multiple: false, 
-    accept: { 
-      "application/pdf": [".pdf"], 
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-      "application/msword": [".doc"]
-    } 
-  });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: false, accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"], "application/msword": [".doc"] } });
 
   return (
-    <div {...getRootProps()} className="card p-6 rounded-2xl cursor-pointer transition-all duration-200 hover:border-white/10">
+    <div
+      {...getRootProps()}
+      className={`p-10 rounded-2xl cursor-pointer transition-all duration-300 bg-white/5 backdrop-blur-lg border border-white/10 hover:border-white/20 hover:bg-white/10 ${isDragActive ? "border-brand-accent" : ""}`}
+    >
       <input {...getInputProps()} />
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-lg bg-white/5 flex items-center justify-center mono text-2xl">
-          {file ? "📄" : "📤"}
+      <div className="text-center">
+        <div className="font-semibold text-brand-light">
+          {file ? file.name : isDragActive ? "Drop your resume here" : "Upload Resume"}
         </div>
-        <div>
-          <div className="text-lg font-semibold">{file ? file.name : (isDragActive ? "Drop to upload" : "Upload Resume")}</div>
-          <div className="small mt-1">Supports PDF & DOCX. Drag & drop or click.</div>
+        <div className="small mt-1">
+          {file ? "Click or drop another file to replace" : "Drag & drop or click to select a file"}
         </div>
       </div>
     </div>
   );
 };
-EOF
+TSX
 
-# src/components/JobDetails.tsx
-cat <<'EOF' > frontend/src/components/JobDetails.tsx
+cat > "frontend/src/components/JobDetails.tsx" <<'TSX'
 import React from "react";
 
 interface Props {
@@ -598,36 +586,28 @@ interface Props {
 
 export const JobDetails: React.FC<Props> = ({ jobTitle, jobDescription, setJobTitle, setJobDescription }) => {
   return (
-    <div className="card p-6 rounded-2xl flex-grow">
-      <label className="block mb-3">
-        <div className="small mb-1 font-semibold">Job Title</div>
+    <div className="card p-6 rounded-2xl border-gray-800 space-y-4">
+      <label className="block">
+        <div className="small mb-1">Job Title</div>
         <input value={jobTitle} onChange={(e)=>setJobTitle(e.target.value)} placeholder="e.g. Senior Backend Engineer" className="w-full p-3 rounded-lg bg-transparent border border-white/10 outline-none focus:border-white/30 transition-colors" />
       </label>
       <label className="block">
-        <div className="small mb-1 font-semibold">Job Description (Optional)</div>
-        <textarea value={jobDescription} onChange={(e)=>setJobDescription(e.target.value)} placeholder="Paste the job description here for a more accurate analysis." rows={8} className="w-full p-3 rounded-lg bg-transparent border border-white/10 outline-none resize-y focus:border-white/30 transition-colors"></textarea>
+        <div className="small mb-1">Job Description (Optional)</div>
+        <textarea value={jobDescription} onChange={(e)=>setJobDescription(e.target.value)} placeholder="Paste the job description here for a more accurate score." rows={8} className="w-full p-3 rounded-lg bg-transparent border border-white/10 outline-none resize-y focus:border-white/30 transition-colors"></textarea>
       </label>
     </div>
   );
 };
-EOF
+TSX
 
-# src/components/Results.tsx
-cat <<'EOF' > frontend/src/components/Results.tsx
+cat > "frontend/src/components/Results.tsx" <<'TSX'
 import React from "react";
 
-interface ResultsProps {
-    data: {
-        score: number;
-        summary: string;
-        keywords_match: Record<string, boolean>;
-        missing_technical_skills: string[];
-        missing_other_skills: string[];
-        improvements: string[];
-    };
-}
+interface Props { data: any; }
 
-export const Results: React.FC<ResultsProps> = ({ data }) => {
+export const Results: React.FC<Props> = ({ data }) => {
+  if (!data) return null;
+
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'text-green-400';
     if (score >= 60) return 'text-yellow-400';
@@ -635,82 +615,82 @@ export const Results: React.FC<ResultsProps> = ({ data }) => {
   };
 
   return (
-    <div className="card p-6 rounded-2xl space-y-5 h-full">
+    <div className="card p-6 rounded-2xl border-gray-800 space-y-5 h-full overflow-y-auto">
       <div className="text-center">
         <div className="small">Overall Match Score</div>
-        <div className={`text-7xl font-bold ${getScoreColor(data.score)}`}>{data.score}<span className="text-4xl">%</span></div>
+        <div className={`text-6xl font-bold mt-1 ${getScoreColor(data.score)}`}>{data.score}%</div>
       </div>
 
       <div className="border-t border-white/10 pt-4">
         <h4 className="font-semibold mb-2">Summary</h4>
-        <p className="small leading-relaxed">{data.summary}</p>
+        <p className="small leading-relaxed whitespace-pre-wrap">{data.summary}</p>
       </div>
-      
-      <div className="border-t border-white/10 pt-4">
-        <h4 className="font-semibold mb-2">Keyword Analysis</h4>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(data.keywords_match).map(([keyword, matched]) => (
-            <span key={keyword} className={`text-xs px-2 py-1 rounded ${matched ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>{keyword}</span>
-          ))}
+
+      {data.keywords_match && (
+        <div className="border-t border-white/10 pt-4">
+          <h4 className="font-semibold mb-2">Keyword Analysis</h4>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(data.keywords_match).map(([key, val]) => (
+              <span key={key} className={`px-2 py-1 text-xs rounded ${val ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>{key}</span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {data.missing_technical_skills?.length > 0 && (
         <div className="border-t border-white/10 pt-4">
           <h4 className="font-semibold mb-2">Missing Technical Skills</h4>
           <div className="flex flex-wrap gap-2">
-            {data.missing_technical_skills.map((skill, i) => (
-              <span key={i} className="text-xs px-2 py-1 rounded bg-yellow-500/20 text-yellow-300">{skill}</span>
+            {data.missing_technical_skills.map((skill:string, i:number) => (
+              <span key={i} className="px-2 py-1 text-xs rounded bg-yellow-500/20 text-yellow-300">{skill}</span>
             ))}
           </div>
         </div>
       )}
-
+      
       {data.missing_other_skills?.length > 0 && (
         <div className="border-t border-white/10 pt-4">
-          <h4 className="font-semibold mb-2">Missing Domain & Other Skills</h4>
+          <h4 className="font-semibold mb-2">Missing Other Skills</h4>
           <div className="flex flex-wrap gap-2">
-            {data.missing_other_skills.map((skill, i) => (
-              <span key={i} className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300">{skill}</span>
+            {data.missing_other_skills.map((skill:string, i:number) => (
+              <span key={i} className="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">{skill}</span>
             ))}
           </div>
         </div>
       )}
 
-      <div className="border-t border-white/10 pt-4">
-        <h4 className="font-semibold mb-2">Suggested Improvements</h4>
-        <ul className="list-disc list-inside mt-2 small space-y-1">
-          {data.improvements.map((it:string, i:number)=> <li key={i}>{it}</li>)}
-        </ul>
-      </div>
+      {data.improvements && (
+        <div className="border-t border-white/10 pt-4">
+          <h4 className="font-semibold mb-2">Suggested Improvements</h4>
+          <ul className="list-disc list-inside mt-2 small space-y-1">
+            {data.improvements.map((it:string, i:number)=> <li key={i}>{it}</li>)}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
-EOF
+TSX
 
-# src/components/Spinner.tsx
-cat <<'EOF' > frontend/src/components/Spinner.tsx
+cat > "frontend/src/components/Spinner.tsx" <<'TSX'
 import React from "react";
 
 export const Spinner: React.FC = () => (
-  <div className="w-5 h-5 rounded-full border-t-2 border-b-2 border-black animate-spin" />
+    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
 );
-EOF
-
-
-cd ..
+TSX
 
 # --- README ---
 cat <<'EOF' > README.md
-# ResuMate: ATS Score Calculator
+# Resume Score Engine
 
-This project is a full-stack application that allows users to upload their resume and get a detailed ATS (Applicant Tracking System) score and analysis against a job description.
+A sleek, modern, and fast resume analyzer that scores your resume against a job description using the power of AI.
 
 ## Tech Stack
 
--   **Frontend:** React, TypeScript, Tailwind CSS, Axios, Vite
+-   **Frontend:** React, TypeScript, Tailwind CSS, Vite
 -   **Backend:** FastAPI, Python
--   **AI/LLM:** LangChain, Groq (with Llama 4 Maverick)
+-   **AI/LLM:** LangChain, Groq (with meta-llama/llama-4-maverick-17b-128e-instruct)
 
 ## Getting Started
 
@@ -718,12 +698,12 @@ This project is a full-stack application that allows users to upload their resum
 
 -   Node.js and npm (or yarn)
 -   Python 3.8+ and pip
--   A Groq API Key
+-   Your Groq API Key
 
 ### Installation
 
-1.  **Run the setup script** (if you have it) or clone the repository.
-2.  **Navigate to the project root:** `cd resume-ats-checker`
+1.  **Run the `setup_project.sh` script** in your desired directory.
+2.  **Navigate to the project root:** `cd resume-score-engine`
 3.  **Install backend dependencies:**
     ```bash
     cd backend
@@ -743,14 +723,14 @@ This project is a full-stack application that allows users to upload their resum
 
 1.  **Start the backend server:**
     - Open a terminal.
-    - Navigate to `resume-ats-checker/backend`.
+    - Navigate to `resume-score-engine/backend`.
     - Activate the virtual environment: `source venv/bin/activate`
     - Run: `uvicorn app.main:app --reload`
     - The backend will run on `http://127.0.0.1:8000`.
 
 2.  **Start the frontend server:**
     - Open a **new, separate** terminal.
-    - Navigate to `resume-ats-checker/frontend`.
+    - Navigate to `resume-score-engine/frontend`.
     - Run: `npm run dev`
     - The frontend will run on `http://localhost:5173`.
 
@@ -763,6 +743,6 @@ echo "✅ Project setup complete!"
 echo "--------------------------------------------------"
 echo ""
 echo "To run your application:"
-echo "1. cd resume-ats-checker"
+echo "1. cd resume-score-engine"
 echo "2. Follow the instructions in the README.md to install dependencies and run the servers."
 echo ""
