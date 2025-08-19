@@ -27,7 +27,7 @@ const App: React.FC = () => {
       form.append("job_title", jobTitle);
       form.append("job_description", jobDescription);
       
-      const resp = await axios.post("http://localhost:8000/analyze-resume/", form, { 
+      const resp = await axios.post("https://resume-analyzer-backend-0udg.onrender.com/", form, { 
         headers: { "Content-Type": "multipart/form-data" } 
       });
       setResults(resp.data);
