@@ -125,8 +125,3 @@ This project is deployed with a split backend/frontend architecture.
       * **Framework Preset:** `Vite`
       * **Root Directory:** `resume-ats-checker/frontend`
 5.  Deploy\!
-
-<!-- end list -->
-
-```
-```
