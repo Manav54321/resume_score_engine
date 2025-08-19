@@ -17,7 +17,8 @@ app = FastAPI(title="Resume ATS Analyzer API")
 # IMPORTANT: Add your Vercel URL here after deployment
 origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://1227.0.0.1:5173",
+    "https://resume-score-engine.vercel.app",
     "https://resume-score-engine-git-main-manav-desais-projects.vercel.app", 
 ]
 
